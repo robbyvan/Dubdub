@@ -1,5 +1,10 @@
 import React, { Component } from 'react';
 import Icon  from 'react-native-vector-icons/Ionicons';
+
+import List from './app/creation/index'
+import Edit from './app/edit/index'
+import Account from './app/account/index'
+
 import {
   AppRegistry,
   StyleSheet,
@@ -8,35 +13,6 @@ import {
   TabBarIOS
 } from 'react-native';
 
-class List extends Component {
-  render() {
-    return (
-      <View style={styles.container}>
-        <Text>Hello I'm List</Text>
-      </View>
-    );
-  }
-}
-
-class Edit extends Component {
-  render() {
-    return (
-      <View style={styles.container}>
-        <Text>Hello I'm Edit</Text>
-      </View>
-    );
-  }
-}
-
-class Account extends Component {
-  render() {
-    return (
-      <View style={styles.container}>
-        <Text>Hello I'm Account</Text>
-      </View>
-    );
-  }
-}
 
 export default class Dubdub extends Component {
 
