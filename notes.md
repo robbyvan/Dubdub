@@ -85,5 +85,7 @@ iOS屏幕尺寸与分辨率
       />
   </View>
 
-
+播放控制-进度条/重播
+  onEnd无法触发解决: https://github.com/react-native-community/react-native-video/issues/545
+  
 
