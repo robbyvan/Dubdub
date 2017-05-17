@@ -9,7 +9,8 @@ import {
   Image,
   Dimensions,
   ActivityIndicator,
-  RefreshControl
+  RefreshControl,
+  AlertIOS
 } from 'react-native';
 
 var request = require('./../common/request');
@@ -21,8 +22,90 @@ var cachedResults = {
   nextPage: 1,
   items: [],
   total: 0
+};
+
+class Item extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      up: this.props.row.voted
+    };
+  }
+
+  _up() {
+    console.log('pressed Like');
+    let up = !this.state.up;
+    let row = this.props.row;
+
+    let url = config.api.base + config.api.up;
+    let body = {
+      id: row._id,
+      up: up? 'yes': 'no',
+      accessToken: 'abcde'
+    };
+
+    request.post(url, body)
+      .then((data) => {
+        if (data && data.success) {
+          this.setState({
+            up: up
+          });
+        } else {
+          AlertIOS.alert('操作失败了, 稍后再试试吧');
+        }
+      })
+      .catch((err)  => {
+        console.log(err);
+        AlertIOS.alert('操作失败了, 稍后再试试吧')
+      });
+  }
+
+  render() {
+    return (
+      <TouchableHighlight>
+        <View style={styles.item}>
+
+          <Text style={styles.title}>{this.props.row.title}</Text>
+
+          <Image
+            source={{uri: this.props.row.thumb}}
+            style={styles.thumb}
+            >
+            <Icon
+              name='ios-play'
+              size={28}
+              style={styles.play} />
+          </Image>
+
+          <View style={styles.itemFooter}>
+
+            <View style={styles.handleBox}>
+              <Icon
+              name={this.state.up? 'ios-heart': 'ios-heart-outline'}
+              size={28}
+              style={[styles.up, this.state.up? null: styles.down]} 
+              onPress={this._up.bind(this)}
+              />
+              <Text style={styles.handleText}>喜欢</Text>
+            </View>
+
+            <View style={styles.handleBox}>
+              <Icon
+              name='ios-chatboxes-outline'
+              size={28}
+              style={styles.commentIcon} />
+              <Text style={styles.handleText}>评论</Text>
+            </View>
+
+          </View>
+
+        </View>
+      </TouchableHighlight>
+    )
+  }
 }
-;
+
+
 export default class List extends Component {
 
   constructor() {
@@ -37,45 +120,8 @@ export default class List extends Component {
   }
 
   _renderRow(row) {
-    return (
-      <TouchableHighlight>
-        <View style={styles.item}>
-
-          <Text style={styles.title}>{row.title}</Text>
-
-          <Image
-            source={{uri: row.thumb}}
-            style={styles.thumb}
-            >
-            <Icon
-              name='ios-play'
-              size={28}
-              style={styles.play} />
-          </Image>
-
-          <View style={styles.itemFooter}>
-
-            <View style={styles.handleBox}>
-              <Icon
-              name='ios-heart-outline'
-              size={28}
-              style={styles.up} />
-              <Text style={styles.handleText}>喜欢</Text>
-            </View>
-
-            <View style={styles.handleBox}>
-              <Icon
-              name='ios-chatboxes-outline'
-              size={28}
-              style={styles.up} />
-              <Text style={styles.handleText}>评论</Text>
-            </View>
-
-          </View>
-
-        </View>
-      </TouchableHighlight>
-    )
+    //row 是dataSource数组里面的对象
+    return <Item row={row} />
   }
 
   componentDidMount() {
@@ -292,11 +338,15 @@ const styles = StyleSheet.create({
     color: '#333'
   },
   up: {
-    fontSize: 33,
+    fontSize: 22,
+    color: '#ed7b66'
+  },
+  down: {
+    fontSize: 22,
     color: '#333'
   },
   commentIcon: {
-    fontSize: 33,
+    fontSize: 22,
     color: '#333'
   },
   loadingMore: {
