@@ -1,11 +1,13 @@
 import React, { Component } from 'react';
 import Icon  from 'react-native-vector-icons/Ionicons';
+
 import {
   StyleSheet,
   Text,
   View,
   Dimensions,
-  ActivityIndicator
+  ActivityIndicator,
+  TouchableOpacity
 } from 'react-native';
 
 import Video from 'react-native-video';
@@ -19,8 +21,10 @@ export default class Detail extends Component {
     this.state = {
       data: this.props.data,
 
-      playing: false,
       videoLoaded: false,
+      playing: false,
+      paused: false,
+      
       videoProgress: 0.01,
       videoTotal: 0,
       currentTime: 0,
@@ -41,6 +45,24 @@ export default class Detail extends Component {
     this.refs.videoPlayer.seek(0);
   }
 
+  _pause() {
+    console.log('PPPPPPPPAAAAAUUUUUUSSSSSEE!!!!!!!');
+    if (!this.state.paused){
+      this.setState({
+        paused: true
+      });  
+    }
+  }
+
+  _resume() {
+    if (this.state.paused){
+      this.setState({
+        paused: false
+      });  
+    }
+    
+  }
+
   render() {
     let data = this.props.data;
     console.log(data);
@@ -54,7 +76,7 @@ export default class Detail extends Component {
             source={{uri: data.video}}
             style={styles.video}
             volumn={3}
-            pause={false}
+            paused={this.state.paused}
             rate={this.state.rate}
             muted={this.state.muted}
             resizeMode={this.state.resizeMode}
@@ -65,18 +87,41 @@ export default class Detail extends Component {
             onEnd={this._onEnd.bind(this)}
             onError={this._onError.bind(this)}
           />
+
+
           {
+            // 加载中图标
               !this.state.videoLoaded && <ActivityIndicator color='#ee735c' style={styles.loadingVideo} />
           }
 
           {
+            // 重播按钮
               this.state.videoLoaded && !this.state.playing ? 
                 <Icon onPress={this._replay.bind(this)} 
-                      name='ios-play'
+                      name='ios-refresh'
                       size={48}
                       style={styles.playIcon}
                       />
               : null
+          }
+
+          {
+            // 暂停播放按钮
+            this.state.videoLoaded && this.state.playing ?
+              <TouchableOpacity onPress={this._pause.bind(this)} 
+                                style={styles.pauseBtn}
+                                >
+                {
+                  this.state.paused?
+                  <Icon onPress={this._resume.bind(this)}
+                        name='ios-play'
+                        size={48}
+                        style={styles.resumeIcon} 
+                        />
+                  :null
+                }
+              </TouchableOpacity>
+              :null
           }
 
           <View style={styles.progressBox}>
@@ -176,6 +221,28 @@ const styles = StyleSheet.create({
     backgroundColor: '#ff6600'
   },
   playIcon: {
+    position: 'absolute',
+    top: 140,
+    bottom: 14,
+    left: width / 2 - 30,
+    width: 60,
+    height: 60,
+    paddingTop: 8,
+    paddingLeft: 22,
+    backgroundColor: 'transparent',
+    borderColor: '#fff',
+    borderWidth: 1,
+    borderRadius: 30,
+    color: '#ed7b66'
+  },
+  pauseBtn: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    width: width,
+    height: 360
+  },
+  resumeIcon: {
     position: 'absolute',
     top: 140,
     bottom: 14,
