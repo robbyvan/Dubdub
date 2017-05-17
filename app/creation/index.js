@@ -124,6 +124,7 @@ export default class List extends Component {
   }
 
   _fetchData(page) {
+    console.log('gonna fetch');
 
     var that = this;
 
@@ -139,16 +140,15 @@ export default class List extends Component {
       });
     }
 
-
     //请求数据
     request.get(config.api.base + config.api.creations, {
       accessToken: 'adc',
       page: page
     })
       .then((data) => {
-        // console.log('data', data);
+        console.log('got data', data);
         if (data.success){
-          // console.log(data);
+          console.log(data);
           let items = cachedResults.items.slice(0);
 
           if (page !== 0) {
@@ -177,7 +177,7 @@ export default class List extends Component {
                   cachedResults.items)
               });
             }
-          }, 20);
+          }, 0);
         }
       })
       .catch((error) => {

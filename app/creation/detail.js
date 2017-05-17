@@ -9,10 +9,13 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   ScrollView,
-  Image
+  Image,
+  ListView
 } from 'react-native';
 
 import Video from 'react-native-video';
+var request = require('./../common/request');
+var config = require('./../common/config');
 
 let width = Dimensions.get('window').width;
 
@@ -20,8 +23,10 @@ export default class Detail extends Component {
 
   constructor(props) {
     super(props);
+    const ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
     this.state = {
       data: this.props.data,
+      dataSource: ds.cloneWithRows([]),
 
       videoLoaded: false,
       playing: false,
@@ -37,7 +42,6 @@ export default class Detail extends Component {
       muted: false,
       resizeMode: 'contain',
       repeat: false
-
     };
   }
 
@@ -50,7 +54,7 @@ export default class Detail extends Component {
   }
 
   _pause() {
-    console.log('PPPPPPPPAAAAAUUUUUUSSSSSEE!!!!!!!');
+    // console.log('PPPPPPPPAAAAAUUUUUUSSSSSEE!!!!!!!');
     if (!this.state.paused){
       this.setState({
         paused: true
@@ -63,13 +67,67 @@ export default class Detail extends Component {
       this.setState({
         paused: false
       });  
-    }
-    
+    } 
+  }
+
+  componentDidMount() {
+    //装载后再请求视频
+    // console.log('Did Mount Video');
+    this._fetchData();
+  }
+
+  _fetchData() {
+    // console.log('gonnnnna fetch');
+    let that = this;
+    let url = config.api.base + config.api.comments;
+
+    request.get(url, {
+      creation: 124,
+      accessToken: '123a'
+    })
+    .then((data) => {
+      // console.log('got comments');
+      // console.log(data);
+      if (data && data.success){
+        let comments = data.data;
+        
+
+        if (comments && comments.length > 0){
+          that.setState({
+            comments: comments,
+            dataSource: that.state.dataSource.cloneWithRows(comments)
+          });
+        }
+
+      }
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+  }
+
+  _renderRow(row) {
+
+    return (
+      <View
+        key={row._id}
+        style={styles.replyBox}
+        >
+        <Image 
+              style={styles.replyAvatar} 
+              source={{uri: row.replyBy.avatar}} 
+              />
+        <View style={styles.reply}>
+          <Text style={styles.replyNickname}>{row.replyBy.nickname}</Text>
+          <Text style={styles.replyContent}>{row.content}</Text>
+        </View>
+      </View>
+    )
   }
 
   render() {
     let data = this.props.data;
-    console.log(data);
+    // console.log(data);
 
     return (
       <View style={styles.container}>
@@ -166,6 +224,15 @@ export default class Detail extends Component {
                 <Text style={styles.title}>{data.title}</Text>
               </View>
           </View>
+
+          <ListView
+          dataSource={this.state.dataSource}
+          renderRow={this._renderRow.bind(this)}
+          showsVerticalScrollIndicator={false}
+          enableEmptySections={true}
+          automaticallyAdjustContentInsets={false}
+        />
+
         </ScrollView>
 
       </View>
@@ -173,11 +240,11 @@ export default class Detail extends Component {
   }
 
   _onLoadStart(){
-    console.log('start');
+    // console.log('start');
   }
 
   _onLoad(){
-    console.log('load');
+    // console.log('load');
   }
 
   _onProgress(data){
@@ -206,12 +273,12 @@ export default class Detail extends Component {
     }
     this.setState(newState);
 
-    console.log('progress');
-    console.log(data);
+    // console.log('progress');
+    // console.log(data);
   }
 
   _onEnd(){
-    console.log('end');
+    // console.log('end');
     this.setState({
       videoProgress: 1,
       playing: false
@@ -269,18 +336,18 @@ const styles = StyleSheet.create({
   },
   videoBox: {
     width: width,
-    height: 360,
+    height: width * 0.56,
     backgroundColor: '#F5FCFF'
   },
   video: {
     width: width,
-    height: 360,
+    height: width * 0.56,
     backgroundColor: '#000'
   },
   loadingVideo: {
     position: 'absolute',
     left: 0,
-    top: 140,
+    top: 80,
     width: width,
     alignSelf: 'center',
     backgroundColor: 'transparent'
@@ -297,7 +364,7 @@ const styles = StyleSheet.create({
   },
   playIcon: {
     position: 'absolute',
-    top: 140,
+    top: 90,
     bottom: 14,
     left: width / 2 - 30,
     width: 60,
@@ -319,7 +386,7 @@ const styles = StyleSheet.create({
   },
   resumeIcon: {
     position: 'absolute',
-    top: 140,
+    top: 80,
     bottom: 14,
     left: width / 2 - 30,
     width: 60,
@@ -335,7 +402,7 @@ const styles = StyleSheet.create({
   failText: {
     position: 'absolute',
     left: 0,
-    top: 180,
+    top: 90,
     width: width,
     textAlign: 'center',
     color: '#fff',
@@ -364,5 +431,27 @@ const styles = StyleSheet.create({
     marginTop: 8,
     fontSize: 16,
     color: '#666'
+  },
+  replyBox: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    marginTop: 10,
+  },
+  replyAvatar: {
+    width: 40,
+    height: 40,
+    marginRight: 10,
+    marginLeft: 10,
+    borderRadius: 20
+  },
+  replyNickname: {
+    color: '#666'
+  },
+  replyContent: {
+    marginTop: 4,
+    color: '#666'
+  },
+  reply: {
+    flex: 1
   }
 });

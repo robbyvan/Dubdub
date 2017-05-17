@@ -96,6 +96,11 @@ iOS屏幕尺寸与分辨率
 
 详情页视频信息补全
   添加作者信息(头像,昵称)
+
+获取评论列表
+  新建接口
+  创建ListView装评论, dataSource + _renderRow
   
+
 
 
