@@ -89,5 +89,9 @@ iOS屏幕尺寸与分辨率
   onEnd无法触发解决: https://github.com/react-native-community/react-native-video/issues/545
 
 暂停/重播按钮
-  
+  this.state.paused控制video paued的props
+
+容错处理
+ 视频出错
+
 

@@ -24,6 +24,8 @@ export default class Detail extends Component {
       videoLoaded: false,
       playing: false,
       paused: false,
+
+      videoOk: true,
       
       videoProgress: 0.01,
       videoTotal: 0,
@@ -37,7 +39,7 @@ export default class Detail extends Component {
     };
   }
 
-  _backToList() {
+  _pop() {
     this.props.navigator.pop();
   }
 
@@ -69,11 +71,24 @@ export default class Detail extends Component {
 
     return (
       <View style={styles.container}>
-        <Text onPress={() => this._backToList()}>详情页面{data._id}</Text>
+        <View style={styles.header}>
+          <TouchableOpacity 
+            style={styles.backBox}
+            onPress={this._pop.bind(this)}
+            >
+            <Icon name='ios-arrow-back'
+                  style={styles.backIcon} 
+                  />
+            <Text style={styles.backText}>返回</Text>
+            </TouchableOpacity>
+          <Text style={styles.headerTitle}
+                numberOfLines={1}>视频详情页</Text>
+        </View>
+        
         <View style={styles.videoBox}>
           <Video 
             ref='videoPlayer'
-            source={{uri: data.video}}
+            source={{uri: data.video + '12211'}}
             style={styles.video}
             volumn={3}
             paused={this.state.paused}
@@ -87,6 +102,10 @@ export default class Detail extends Component {
             onEnd={this._onEnd.bind(this)}
             onError={this._onError.bind(this)}
           />
+
+          {
+            !this.state.videoOk && <Text style={styles.failText}>啊哟, 视频出错了</Text>
+          }
 
 
           {
@@ -180,6 +199,9 @@ export default class Detail extends Component {
   }
 
   _onError(err){
+    this.setState({
+      videoOk: false
+    });
     console.log('error', err);
   }
 }
@@ -191,6 +213,39 @@ const styles = StyleSheet.create({
     // justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#F5FCFF',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: width,
+    height: 64,
+    paddingTop: 20,
+    paddingLeft: 10,
+    paddingRight: 10,
+    borderBottomWidth: 1,
+    borderColor: 'rgba(0,0,0,1)',
+    backgroundColor: '#fff'
+  },
+  backBox: {
+    position: 'absolute',
+    left: 12,
+    top: 32,
+    width: 50,
+    flexDirection: 'row',
+    alignItems: 'center' 
+  },
+  backIcon: {
+    color: '#999',
+    fontSize: 20,
+    marginRight: 5
+  },
+  backText: {
+    color: '#999'
+  },
+  headerTitle: {
+    width: width - 120,
+    textAlign: 'center'
   },
   videoBox: {
     width: width,
@@ -256,5 +311,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 30,
     color: '#ed7b66'
+  },
+  failText: {
+    position: 'absolute',
+    left: 0,
+    top: 180,
+    width: width,
+    textAlign: 'center',
+    color: '#fff',
+    backgroundColor: 'transparent'
   }
 });
