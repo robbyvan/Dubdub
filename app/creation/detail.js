@@ -7,7 +7,9 @@ import {
   View,
   Dimensions,
   ActivityIndicator,
-  TouchableOpacity
+  TouchableOpacity,
+  ScrollView,
+  Image
 } from 'react-native';
 
 import Video from 'react-native-video';
@@ -148,6 +150,24 @@ export default class Detail extends Component {
           </View>
 
         </View>
+
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          enableEmptySections={true}
+          automaticallyAdjustContentInsets={false}
+          style={styles.scrollView}>
+          <View style={styles.infoBox}>
+            <Image 
+              style={styles.avatar} 
+              source={{uri: data.author.avatar}} 
+              />
+              <View style={styles.descBox}>
+                <Text style={styles.nickname}>{data.author.nickname}</Text>
+                <Text style={styles.title}>{data.title}</Text>
+              </View>
+          </View>
+        </ScrollView>
+
       </View>
     );
   }
@@ -320,5 +340,29 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#fff',
     backgroundColor: 'transparent'
+  },
+  infoBox: {
+    width: width,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 10
+  },
+  avatar: {
+    width: 60,
+    height: 60,
+    marginRight: 10,
+    marginLeft: 10,
+    borderRadius: 30
+  },
+  descBox: {
+    flex: 1
+  },
+  nickname: {
+    fontSize: 18
+  },
+  title: {
+    marginTop: 8,
+    fontSize: 16,
+    color: '#666'
   }
 });
