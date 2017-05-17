@@ -7,7 +7,9 @@ import {
   ListView,
   TouchableHighlight,
   Image,
-  Dimensions
+  Dimensions,
+  ActivityIndicator,
+  RefreshControl
 } from 'react-native';
 
 var request = require('./../common/request');
@@ -15,6 +17,12 @@ var config = require('./../common/config');
 
 let width = Dimensions.get('window').width;
 
+var cachedResults = {
+  nextPage: 1,
+  items: [],
+  total: 0
+}
+;
 export default class List extends Component {
 
   constructor() {
@@ -22,10 +30,13 @@ export default class List extends Component {
     const ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
     this.state = {
       dataSource: ds.cloneWithRows([]),
+      isLoadingTail: false,
+      isRefreshing: false
     };
+    
   }
 
-  renderRow(row) {
+  _renderRow(row) {
     return (
       <TouchableHighlight>
         <View style={styles.item}>
@@ -68,26 +79,123 @@ export default class List extends Component {
   }
 
   componentDidMount() {
-    console.log("did");
-    this._fetchData();
+    this._fetchData(1);
   }
 
-  _fetchData() {
+  _fetchData(page) {
+
+    var that = this;
+
+    if (page !== 0) {
+      //是下滑浏览
+      this.setState({
+        isLoadingTail: true
+      });
+    }else {
+      //是上拉刷新
+      this.setState({
+        isRefreshing: true
+      });
+    }
+
+
+    //请求数据
     request.get(config.api.base + config.api.creations, {
-      accessToken: 'adc'
+      accessToken: 'adc',
+      page: page
     })
       .then((data) => {
-        console.log('data', data);
+        // console.log('data', data);
         if (data.success){
-          this.setState({
-          dataSource: this.state.dataSource.cloneWithRows(data.data)
-          });
+          // console.log(data);
+          let items = cachedResults.items.slice(0);
+
+          if (page !== 0) {
+            //如果是下滑浏览更多, 把请求数据放在本地后面
+            items = items.concat(data.data);  
+            cachedResults.nextPage += 1;
+          }else {
+            //如果是下拉刷新,把本地放在请求数据之后重渲染
+            items = data.data.concat(items);
+          }
+
+          cachedResults.items = items;
+          cachedResults.total = data.total;
+
+          setTimeout(() => {
+            if (page !== 0) {
+              that.setState({
+                isLoadingTail: false,
+                dataSource: that.state.dataSource.cloneWithRows(
+                  cachedResults.items)
+              })
+            }else {
+              that.setState({
+                isRefreshing: false,
+                dataSource: that.state.dataSource.cloneWithRows(
+                  cachedResults.items)
+              });
+            }
+          }, 20);
         }
       })
       .catch((error) => {
+        if (page !== 0) {
+          this.setState({
+            isLoadingTail: false
+          })
+        }else {
+          this.setState({
+            isRefreshing: false
+          })
+        }
         console.error(error);
       });
   }
+
+  _hasMore() {
+    // console.log('hasmore?');
+    console.log(cachedResults.items.length, cachedResults.total);
+    return cachedResults.items.length !== cachedResults.total;
+  }
+
+  _onRefresh() {
+    if (!this._hasMore() || this.state.isRefreshing) {
+      return;
+    }
+
+    this._fetchData(0);
+  }
+
+  _fetchMoreData() {
+    if (!this._hasMore() || this.state.isLoadingTail) {
+      return;
+    }
+
+    let page = cachedResults.nextPage;
+
+    console.log(this.state);
+
+    this._fetchData(page);
+  }
+
+  _renderFooter() {
+    if (!this._hasMore() && cachedResults.total !== 0) {
+      return (
+        <View style={styles.loadingMore}>
+          <Text style={styles.loadingText}>没有更多了</Text>
+        </View>
+      )
+    }
+
+    if (!this.state.isLoadingTail) {
+      return <View style={styles.loadingMore} />
+    }
+
+    return  <ActivityIndicator style={styles.loadingMore} />
+  }
+
+  
 
   render() {
     return (
@@ -99,11 +207,22 @@ export default class List extends Component {
 
         <ListView
           dataSource={this.state.dataSource}
-          renderRow={this.renderRow}
+          renderRow={this._renderRow.bind(this)}
+          renderFooter={this._renderFooter.bind(this)}
+          onEndReached={this._fetchMoreData.bind(this)}
+          onEndReachedThreshold={20}
+          refreshControl={
+            <RefreshControl
+              refreshing={this.state.isRefreshing}
+              onRefresh={this._onRefresh.bind(this)}
+              tintColor='#ff6600'
+              title='努力加载中...'
+            />
+          }
+          showsVerticalScrollIndicator={false}
           enableEmptySections={true}
           automaticallyAdjustContentInsets={false}
         />
-
       </View>
     );
   }
@@ -179,5 +298,12 @@ const styles = StyleSheet.create({
   commentIcon: {
     fontSize: 33,
     color: '#333'
+  },
+  loadingMore: {
+    marginVertical: 20
+  },
+  loadingText: {
+    color: '#777',
+    textAlign: 'center'
   }
 });
