@@ -10,8 +10,12 @@ import {
   StyleSheet,
   Text,
   View,
-  TabBarIOS
-} from 'react-native';
+  TabBarIOS,
+} from 'react-native'; 
+
+import {
+  Navigator
+} from 'react-native-deprecated-custom-components';
 
 
 export default class Dubdub extends Component {
@@ -35,7 +39,19 @@ export default class Dubdub extends Component {
               selectedTab: 'list',
             });
           }}>
-        <List />
+          <Navigator
+            initialRoute={{
+              name: 'list',
+              component: List
+            }}
+            configureScene={(route) => {
+              return Navigator.SceneConfigs.FloatFromRight;
+            }}
+            renderScene={(route, navigator) => {
+              let Comp = route.component;
+              return <Comp {...route.params} navigator={navigator} 
+                />
+            }} />
         </Icon.TabBarItem>
 
         <Icon.TabBarItem

@@ -15,6 +15,7 @@ import {
 
 var request = require('./../common/request');
 var config = require('./../common/config');
+import Detail from './detail.js'
 
 let width = Dimensions.get('window').width;
 
@@ -62,7 +63,7 @@ class Item extends Component {
 
   render() {
     return (
-      <TouchableHighlight>
+      <TouchableHighlight onPress={this.props.onSelect}>
         <View style={styles.item}>
 
           <Text style={styles.title}>{this.props.row.title}</Text>
@@ -116,12 +117,6 @@ export default class List extends Component {
       isLoadingTail: false,
       isRefreshing: false
     };
-    
-  }
-
-  _renderRow(row) {
-    //row 是dataSource数组里面的对象
-    return <Item row={row} />
   }
 
   componentDidMount() {
@@ -241,8 +236,6 @@ export default class List extends Component {
     return  <ActivityIndicator style={styles.loadingMore} />
   }
 
-  
-
   render() {
     return (
       <View style={styles.container}>
@@ -272,6 +265,26 @@ export default class List extends Component {
       </View>
     );
   }
+
+  _loadPage(row) {
+    this.props.navigator.push({
+      name: 'detail',
+      component: Detail,
+      params: {
+        data: row
+      }
+    });
+  }
+
+  _renderRow(row) {
+    //row 是dataSource数组里面的对象
+    return <Item 
+      key={row._id}
+      row={row} 
+      onSelect={() => this._loadPage(row)}
+      />
+  }
+
 }
 
 
