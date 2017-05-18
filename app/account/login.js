@@ -48,6 +48,7 @@ export default class Login extends Component {
         if (data && data.success){
           console.log('login ok!');
           console.log(data);
+          this.props.afterLogin(data.data);
           // that._showVerifyCode();
         }else {
           AlertIOS.alert('获取失败, 请检查手机号');

@@ -12,6 +12,7 @@ import {
   Text,
   View,
   TabBarIOS,
+  AsyncStorage
 } from 'react-native'; 
 
 import {
@@ -24,11 +25,58 @@ export default class Dubdub extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      user: null,
       selectedTab: 'list',
+      logined: false
     };
   }
 
+  componentDidMount() {
+    this._asyncAppStatus();
+  }
+
+  _asyncAppStatus() {
+    let that = this;
+
+    AsyncStorage.getItem('user')
+      .then((data) => {
+        let user;
+        let newState = {};
+
+        if (data) {
+          user = JSON.parse(data);
+        }
+
+        if (user && user.accessToken) {
+          newState.user = user;
+          newState.logined = true;
+        }else {
+          newState.logined = false;
+        }
+
+        that.setState(newState);
+      });
+  }
+
+  _afterLogin(user) {
+    let that = this;
+
+    user = JSON.stringify(user);
+    AsyncStorage.setItem('user', user)
+      .then(() => {
+        that.setState({
+          logined: true,
+          user: user
+        });
+      });
+  }
+
   render() {
+    if (!this.state.user) {
+      return (
+        <Login afterLogin={this._afterLogin.bind(this)}/>
+      );
+    }
     return (
       <TabBarIOS tintColor="#ee735c">
         <Icon.TabBarItem
@@ -76,7 +124,7 @@ export default class Dubdub extends Component {
               selectedTab: 'account',
             });
           }}>
-          <Login />
+          <Account />
         </Icon.TabBarItem>
 
       </TabBarIOS>
