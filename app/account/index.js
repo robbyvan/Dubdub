@@ -3,14 +3,43 @@ import Icon  from 'react-native-vector-icons/Ionicons';
 import {
   StyleSheet,
   Text,
-  View
+  View,
+  TouchableOpacity,
+  Dimensions
 } from 'react-native';
 
+let width = Dimensions.get('window').width;
+
 export default class Account extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      user: {}
+    };
+  }
+
   render() {
+    let user = this.state.user;
+
     return (
       <View style={styles.container}>
-        <Text>Hello I'm Account</Text>
+        <View style={styles.toolbar}>
+          <Text style={styles.toolbarTitle}>关于我</Text>
+        </View>
+
+        
+          <View style={styles.avatarContainer}>
+              <Text style={styles.avatarTip}>更换头像</Text>
+              <TouchableOpacity style={styles.avatarBox}>
+                <Icon 
+                  name='ios-add'
+                  style={styles.plusIcon}
+                  />
+              </TouchableOpacity>
+          </View>
+        
+        
+
       </View>
     );
   }
@@ -20,18 +49,45 @@ export default class Account extends Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
     backgroundColor: '#F5FCFF',
   },
-  welcome: {
-    fontSize: 20,
-    textAlign: 'center',
-    margin: 10,
+  toolbar: {
+    flexDirection: 'row',
+    paddingTop: 25,
+    paddingBottom: 12,
+    backgroundColor: '#ee735c',
   },
-  instructions: {
+  toolbarTitle: {
+    flex: 1,
+    fontSize: 16,
+    color: '#fff',
     textAlign: 'center',
-    color: '#333333',
-    marginBottom: 5,
+    fontWeight: '600'
   },
+  avatarContainer: {
+    width: width,
+    height: 140,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#666'
+  },
+  avatarBox: {
+    marginTop: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarTip: {
+    color:'#fff'
+  },
+  plusIcon: {
+    padding: 20,
+    paddingLeft: 25,
+    paddingRight: 25,
+    color: '#999',
+    fontSize: 30,
+    backgroundColor: '#fff',
+    borderRadius: 8
+  }
+
+
 });
