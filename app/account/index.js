@@ -7,7 +7,8 @@ import {
   TouchableOpacity,
   Dimensions,
   Image,
-  AsyncStorage
+  AsyncStorage,
+  AlertIOS
 } from 'react-native';
 
 var sha1 = require('sha1');
@@ -42,6 +43,10 @@ const CLOUDINARY = {
 
 let width = Dimensions.get('window').width;
 
+function avatarSource(id, type) {
+  return CLOUDINARY.base + '/' + type + '/upload/' + id;
+}
+
 export default class Account extends Component {
   constructor(props) {
     super(props);
@@ -56,7 +61,7 @@ export default class Account extends Component {
 
     AsyncStorage.getItem('user')
       .then((data) => {
-        console.log(data);
+        // console.log(data);
         let user;
         if (data) {
           user = JSON.parse(data);
@@ -72,42 +77,102 @@ export default class Account extends Component {
   _pickPhoto() {
     let that = this;
 
-    console.log('what');
-
     ImagePicker.showImagePicker(photoOptions, (response) => {
       if (response.didCancel) {
         return;
       }
 
       let avatarData = 'data:image/jpeg;base64,' + response.data;
-      let user = this.state.user;
-
-      user.avatar = avatarData;
-
-      that.setState({
-        user: user
-      });
 
       let timestamp = Date.now();
-      let tags = 'app, avatar';
+      let tags = 'app,avatar';
       let folder = 'avatar';
       let signatureURL = config.api.base + config.api.signature;
       let accessToken = this.state.user.accessToken;
 
       request.post(signatureURL, {
         accessToken: accessToken,
+        folder: folder,
+        tags: tags,
         timestamp: timestamp,
         type: 'avatar'
       })
+      .catch((err) => {
+        console.log(err);
+      })
       .then((data) => {
+        console.log('data', data);
         if (data && data.success) {
           let signature = 'folder=' + folder + '&tags=' + tags + '&timestamp=' + timestamp + CLOUDINARY.api_secret;
           signature = sha1(signature);
+
+          let body = new FormData();
+
+          body.append('folder', folder);
+          body.append('signature', signature);
+          body.append('tags', tags);
+          body.append('timestamp', timestamp);
+          body.append('api_key', CLOUDINARY.api_key);
+          body.append('resource_type', 'image');
+          body.append('file', avatarData);
+
+          that._upload(body);
+
         }
       })
 
-
     });
+  }
+
+  _upload(body) {
+
+    let that = this;
+
+    let xhr = new XMLHttpRequest();
+    let url = CLOUDINARY.image;
+
+    console.log('body', body, 'url', url);
+    xhr.open('POST', url);
+
+    console.log('new xhr', xhr);
+
+    xhr.onload = () => {
+      console.log('onload here');
+      if (xhr.status !== 200) {
+        AlertIOS.alert('请求失败了');
+        console.log(xhr.responseText);
+        return;
+      }
+
+      if (!xhr.responseText) {
+        AlertIOS.alert('请求失败了');
+        console.log(xhr.responseText);
+        return;
+      }
+
+      let response;//返回的纯文本
+      console.log('response', response);
+      try {
+        response = JSON.parse(xhr.response)
+      }catch(e) {
+        console.log(e);
+        console.log('parse failed');
+      }
+
+      if (response && response.public_id) {
+        let user = this.state.user;
+        user.avatar = avatarSource(response.public_id, 'image');
+
+        that.setState({
+          user: user
+        });
+      }
+    }
+    xhr.onerror = (err) => {
+      console.log('on error', err);
+    }
+
+    xhr.send(body);
   }
 
   render() {
