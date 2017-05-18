@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 
 var Button = require('react-native-button').default;
+// var CountDown = require('react-native-sk-countdown').CountDownText;
 
 var request = require('./../common/request');
 var config = require('./../common/config');
@@ -20,11 +21,44 @@ export default class Login extends Component {
     this.state = {
       codeSent: false,
       phoneNumber: '',
-      verifyCode: ''
+      verifyCode: '',
+      // countingDone: false
     };
   }
 
   _submit() {
+
+    let that = this;
+    let phoneNumber = this.state.phoneNumber;
+    let verifyCode = this.state.verifyCode;
+
+    if (!phoneNumber || !verifyCode){
+      return AlertIOS.alert('手机号和验证码不能为空');
+    }
+
+    let body = {
+      phoneNumber: phoneNumber,
+      verifyCode: verifyCode
+    };
+
+    let url = config.api.base + config.api.verify;
+    console.log(url);
+
+    request.post(url, body)
+      .then((data) => {
+        if (data && data.success){
+          console.log('login ok!');
+          console.log(data);
+          // that._showVerifyCode();
+        }else {
+          AlertIOS.alert('获取失败, 请检查手机号');
+        }
+      })
+      .catch((err) => {
+        throw err;
+        AlertIOS.alert('获取失败, 请检查当前网络状况')
+      });
+
 
   }
 
@@ -49,23 +83,28 @@ export default class Login extends Component {
 
     let url = config.api.base + config.api.signup;
     console.log(url);
-    
+
     request.post(url, body)
       .then((data) => {
         if (data && data.success){
           that._showVerifyCode();
         }else {
-          console.log(data);
           AlertIOS.alert('获取失败, 请检查手机号');
         }
       })
       .catch((err) => {
         throw err;
         AlertIOS.alert('获取失败, 请检查当前网络状况')
-      })
+      });
 
 
   }
+
+  // _countingDone() {
+  //   this.setState({
+  //     countingDone: true
+  //   });
+  // }
 
   render() {
     return (
@@ -101,7 +140,7 @@ export default class Login extends Component {
                     }}
                     />
                 </View>
-              :null
+                :null
             }
 
             {
@@ -152,6 +191,20 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     borderWidth: 1,
     color: '#ee735c'
-
+  },
+  verifyCodeBox: {
+    marginTop: 10,
+  },
+  countBtn: {
+    width: 110,
+    padding: 10,
+    height: 40,
+    marginLeft: 8,
+    backgroundColor: 'transparent',
+    borderColor: '#ee735c',
+    borderRadius: 4,
+    borderWidth: 1,
+    color: '#ee735c',
+    borderRadius: 2,
   }
 });
