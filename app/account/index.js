@@ -10,7 +10,12 @@ import {
   AsyncStorage
 } from 'react-native';
 
+var sha1 = require('sha1');
+var request = require('./../common/request');
+var config = require('./../common/config');
+
 var ImagePicker = require('react-native-image-picker');
+
 var photoOptions = {
   title: '选择头像',
   cancelButtonTitle: '取消',
@@ -23,6 +28,16 @@ var photoOptions = {
     skipBackup: true,
     path: 'images'
   }
+};
+
+const CLOUDINARY = {
+  cloud_name: 'dnsavc5be',  
+  api_key: '925995529743554',  
+  api_secret: 'r_pa57uynf1Q0T92L6thDpaIznA',  
+  base:  'http://res.cloudinary.com/dnsavc5be',
+  image: 'https://api.cloudinary.com/v1_1/dnsavc5be/image/upload',
+  video: 'https://api.cloudinary.com/v1_1/dnsavc5be/video/upload',
+  audio: 'https://api.cloudinary.com/v1_1/dnsavc5be/raw/upload'
 };
 
 let width = Dimensions.get('window').width;
@@ -72,6 +87,26 @@ export default class Account extends Component {
       that.setState({
         user: user
       });
+
+      let timestamp = Date.now();
+      let tags = 'app, avatar';
+      let folder = 'avatar';
+      let signatureURL = config.api.base + config.api.signature;
+      let accessToken = this.state.user.accessToken;
+
+      request.post(signatureURL, {
+        accessToken: accessToken,
+        timestamp: timestamp,
+        type: 'avatar'
+      })
+      .then((data) => {
+        if (data && data.success) {
+          let signature = 'folder=' + folder + '&tags=' + tags + '&timestamp=' + timestamp + CLOUDINARY.api_secret;
+          signature = sha1(signature);
+        }
+      })
+
+
     });
   }
 

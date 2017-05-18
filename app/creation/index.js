@@ -15,6 +15,7 @@ import {
 
 var request = require('./../common/request');
 var config = require('./../common/config');
+
 import Detail from './detail.js'
 
 let width = Dimensions.get('window').width;
