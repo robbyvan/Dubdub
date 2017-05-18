@@ -8,7 +8,9 @@ import {
   Dimensions,
   Image,
   AsyncStorage,
-  AlertIOS
+  AlertIOS,
+  Modal,
+  TextInput
 } from 'react-native';
 import * as Progress from 'react-native-progress';
 
@@ -64,8 +66,10 @@ export default class Account extends Component {
     this.state = {
       user: user,
       avatarProgress: 0,
-      avatarUploading: false
+      avatarUploading: false,
+      modalVisible: false
     };
+    this._changeUserState = this._changeUserState.bind(this);
   }
 
   componentDidMount() {
@@ -84,6 +88,18 @@ export default class Account extends Component {
           });
         }
       })
+  }
+
+  _edit() {
+    this.setState({
+      modalVisible: true
+    });
+  }
+
+  _closeModal() {
+    this.setState({
+      modalVisible: false
+    });
   }
 
   _pickPhoto() {
@@ -237,6 +253,16 @@ export default class Account extends Component {
     }
   }
 
+  _changeUserState(key, val) {
+    let user = this.state.user;
+
+    user[key] = val;
+
+    this.setState({
+      user: user
+    });
+  }
+
   render() {
     let user = this.state.user;
 
@@ -244,6 +270,10 @@ export default class Account extends Component {
       <View style={styles.container}>
         <View style={styles.toolbar}>
           <Text style={styles.toolbarTitle}>关于我</Text>
+          <Text 
+            style={styles.toolbarEdit}
+            onPress={this._edit.bind(this)}
+            >编辑</Text>
         </View>
 
         {
@@ -298,6 +328,66 @@ export default class Account extends Component {
               </View>
           </TouchableOpacity>
         }
+
+        <Modal
+          animationType={'fade'}
+          visible={this.state.modalVisible}
+          >
+          <View style={styles.modalContainer}>
+            <Icon 
+              name='ios-close-outline'
+              style={styles.closeIcon}
+              onPress={this._closeModal.bind(this)}
+              />
+              <View style={styles.fieldItem}>
+                <Text style={styles.label}>昵称</Text>
+                <TextInput 
+                  placeholder={'输入你的昵称'}
+                  style={styles.inputField}
+                  autoCapitalize={'none'}
+                  autoCorrect={false}
+                  defaultValue={user.nickname}
+                  onChangeText={(text) => {
+                    this._changeUserState('nickname', text)
+                  }}
+                  />
+              </View>
+
+              <View style={styles.fieldItem}>
+                <Text style={styles.label}>年龄</Text>
+                <TextInput 
+                  style={styles.inputField}
+                  autoCapitalize={'none'}
+                  autoCorrect={false}
+                  defaultValue={user.age}
+                  onChangeText={(text) => {
+                    this._changeUserState('age', text)
+                  }}
+                  />
+              </View>
+
+              <View style={styles.fieldItem}>
+                <Text style={styles.label}>性别</Text>
+                <Icon.Button 
+                  style={[styles.gender, user.gender === 'male' && styles.genderChecked]}
+                  name='ios-nutrition'
+                  onPress={(text) => {
+                    this._changeUserState('gender', 'male')
+                  }}
+                  >男</Icon.Button>
+                <Icon.Button 
+                  style={[styles.gender, user.gender === 'female' && styles.genderChecked]}
+                  name='ios-nutrition-outline'
+                  onPress={(text) => {
+                    this._changeUserState('gender', 'female')
+                  }}
+                >女</Icon.Button>
+              </View>
+
+              
+          </View>
+          
+        </Modal>
           
       </View>
     );
@@ -356,6 +446,55 @@ const styles = StyleSheet.create({
     fontSize: 24,
     backgroundColor: '#fff',
     borderRadius: 8
+  },
+  toolbarEdit: {
+    position: 'absolute',
+    right: 10,
+    top: 26,
+    color: '#fff',
+    textAlign: 'right',
+    fontWeight: '600',
+    fontSize: 14
+  },
+  modalContainer: {
+    flex: 1,
+    paddingTop: 50,
+    backgroundColor: '#fff'
+  },
+  fieldItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    height: 50,
+    paddingLeft: 15,
+    paddingRight: 15,
+    borderColor: '#eee',
+    borderBottomWidth: 1
+  },
+  label: {
+    color: '#ccc',
+    marginRight: 10
+  },
+  inputField: {
+    flex: 1,
+    height: 50,
+    color: '#666',
+    fontSize: 14
+  },
+  closeIcon: {
+    position: 'absolute',
+    fontSize: 32,
+    width: 40,
+    height: 40,
+    color: '#ee735c',
+    top: 30,
+    right: 20
+  },
+  gender: {
+    backgroundColor: '#ccc'
+  },
+  genderChecked: {
+    backgroundColor: '#ee735c'
   }
 
 

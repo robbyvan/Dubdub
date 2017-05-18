@@ -408,9 +408,7 @@ export default class Detail extends Component {
           />
 
         <Modal
-          animationType={'fade'}
           visible={this.state.modalVisible}
-          onRequestClose={() => this._setModalVisible(false)}
           >
           <View style={styles.modalContainer}>
             <Icon 
