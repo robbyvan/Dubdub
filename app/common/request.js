@@ -16,8 +16,14 @@ request.get = function(url, params) {
   console.log(url);
 
   return fetch(url)
-    .then((res) => res.json())
-    .then((responseJson) => Mock.mock(responseJson))
+    .then((res) => {
+      // console.log('no res?', res);
+      return res.json()
+    })
+    .then((responseJson) => {
+      // console.log('no data?', responseJson);
+      return Mock.mock(responseJson)
+    });
 }
 
 request.post = function(url, body) {

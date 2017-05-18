@@ -71,6 +71,14 @@ export default class Dubdub extends Component {
       });
   }
 
+  _logout() {
+    AsyncStorage.removeItem('user');
+    this.setState({
+      logined: false,
+      user: null
+    });
+  }
+
   render() {
     if (!this.state.user) {
       return (
@@ -124,7 +132,9 @@ export default class Dubdub extends Component {
               selectedTab: 'account',
             });
           }}>
-          <Account />
+          <Account 
+            user={this.state.user}
+            logout={this._logout.bind(this)} />
         </Icon.TabBarItem>
 
       </TabBarIOS>

@@ -10,7 +10,7 @@ import {
   AsyncStorage,
   AlertIOS,
   Modal,
-  TextInput
+  TextInput,
 } from 'react-native';
 import * as Progress from 'react-native-progress';
 
@@ -19,6 +19,7 @@ var request = require('./../common/request');
 var config = require('./../common/config');
 
 var ImagePicker = require('react-native-image-picker');
+var Button = require('react-native-button').default;
 
 var photoOptions = {
   title: '选择头像',
@@ -100,6 +101,10 @@ export default class Account extends Component {
     this.setState({
       modalVisible: false
     });
+  }
+
+  _submit() {
+    this._asyncUser();
   }
 
   _pickPhoto() {
@@ -229,11 +234,20 @@ export default class Account extends Component {
     let that = this;
     let user = this.state.user;
 
+    console.log('after', user);
+
     if (user && user.accessToken) {
       let url = config.api.base + config.api.update;
+      console.log(url);
 
-      request.post(url, user)
+      request.get(url)
+        .catch((err) => {
+          console.log('error', err);
+        })
         .then((data) => {
+
+          console.log('what', data);
+
           if (data && data.success) {
             let user = data.data;
 
@@ -244,9 +258,12 @@ export default class Account extends Component {
             that.setState({
               user: user
             }, function() {
+              that._closeModal();
               AsyncStorage.setItem('user', JSON.stringify(user));
             });
 
+          }else {
+            console.log('no data');
           }
         })
 
@@ -261,6 +278,10 @@ export default class Account extends Component {
     this.setState({
       user: user
     });
+  }
+
+  _logout() {
+    this.props.logout();
   }
 
   render() {
@@ -333,6 +354,7 @@ export default class Account extends Component {
           animationType={'fade'}
           visible={this.state.modalVisible}
           >
+
           <View style={styles.modalContainer}>
             <Icon 
               name='ios-close-outline'
@@ -384,10 +406,20 @@ export default class Account extends Component {
                 >女</Icon.Button>
               </View>
 
+              <Button
+                style={styles.btn}
+                onPress={this._submit.bind(this)}
+                >保存</Button>
+
               
           </View>
           
         </Modal>
+
+        <Button
+          style={styles.btn}
+          onPress={this._logout.bind(this)}
+        >退出登录</Button>
           
       </View>
     );
@@ -437,6 +469,8 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     resizeMode: 'cover',
     borderRadius: width * 0.1,
+    borderWidth: 1,
+    borderColor: '#ddd'
   },
   plusIcon: {
     padding: 20,
@@ -495,7 +529,16 @@ const styles = StyleSheet.create({
   },
   genderChecked: {
     backgroundColor: '#ee735c'
+  },
+  btn: {
+    marginTop: 25,
+    marginLeft: 10,
+    marginRight: 10,
+    padding: 10,
+    backgroundColor: 'transparent',
+    borderColor: '#ee735c',
+    borderRadius: 4,
+    borderWidth: 1,
+    color: '#ee735c'
   }
-
-
 });
