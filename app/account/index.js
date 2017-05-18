@@ -45,6 +45,15 @@ const CLOUDINARY = {
 let width = Dimensions.get('window').width;
 
 function avatarSource(id, type) {
+
+  if (id.indexOf('http') !== -1) {
+    return id;
+  }
+
+  if (id.indexOf('data:image') !== -1) {
+    return id
+  }
+
   return CLOUDINARY.base + '/' + type + '/upload/' + id;
 }
 
@@ -169,13 +178,16 @@ export default class Account extends Component {
 
       if (response && response.public_id) {
         let user = this.state.user;
-        user.avatar = avatarSource(response.public_id, 'image');
+        user.avatar = response.public_id;
 
         that.setState({
           user: user,
           avatarUploading: false,
           avatarProgress: 0,
         });
+
+        that._asyncUser(true);
+
       }
     }
 
@@ -197,6 +209,34 @@ export default class Account extends Component {
     xhr.send(body);
   }
 
+  _asyncUser(isAvatar){
+    let that = this;
+    let user = this.state.user;
+
+    if (user && user.accessToken) {
+      let url = config.api.base + config.api.update;
+
+      request.post(url, user)
+        .then((data) => {
+          if (data && data.success) {
+            let user = data.data;
+
+            if (isAvatar){
+              AlertIOS.alert('头像更新成功');
+            }
+
+            that.setState({
+              user: user
+            }, function() {
+              AsyncStorage.setItem('user', JSON.stringify(user));
+            });
+
+          }
+        })
+
+    }
+  }
+
   render() {
     let user = this.state.user;
 
@@ -214,7 +254,7 @@ export default class Account extends Component {
               >
                 <Image 
                   style={styles.avatarContainer} 
-                  source={{uri: user.avatar}}>
+                  source={{uri: avatarSource(user.avatar, 'image')}}>
                   <View style={styles.avatarBox}>
                     {
                       this.state.avatarUploading
@@ -226,7 +266,7 @@ export default class Account extends Component {
                           progress={this.state.avatarProgress}
                           />
                       :<Image 
-                          source={{uri: user.avatar}}
+                          source={{uri: avatarSource(user.avatar, 'image')}}
                           style={styles.avatar}
                           />
                     }
