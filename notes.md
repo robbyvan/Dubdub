@@ -100,6 +100,11 @@ iOS屏幕尺寸与分辨率
 获取评论列表
   新建接口
   创建ListView装评论, dataSource + _renderRow
+
+  下拉加载 -> 参见列表页
+
+RN里提交评论表单
+  onFocus -> Modal
   
 
 

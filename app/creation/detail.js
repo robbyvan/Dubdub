@@ -8,16 +8,29 @@ import {
   Dimensions,
   ActivityIndicator,
   TouchableOpacity,
-  ScrollView,
   Image,
-  ListView
+  ListView,
+  TextInput,
+  Modal,
+  AlertIOS
 } from 'react-native';
 
 import Video from 'react-native-video';
+var Button = require('react-native-button').default;
+
+
 var request = require('./../common/request');
 var config = require('./../common/config');
 
 let width = Dimensions.get('window').width;
+
+
+
+var cachedResults = {
+  nextPage: 1,
+  items: [],
+  total: 0
+};
 
 export default class Detail extends Component {
 
@@ -25,19 +38,28 @@ export default class Detail extends Component {
     super(props);
     const ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
     this.state = {
+      //video info
       data: this.props.data,
+
+      //comments
       dataSource: ds.cloneWithRows([]),
 
+      //Modal
+      content: '',
+      animationType: 'none',
+      modalVisible: false,
+      isSending: false,
+
+      //video loads
       videoLoaded: false,
       playing: false,
       paused: false,
-
       videoOk: true,
-      
       videoProgress: 0.01,
       videoTotal: 0,
       currentTime: 0,
 
+      //video player
       rate: 1,
       muted: false,
       resizeMode: 'contain',
@@ -54,7 +76,6 @@ export default class Detail extends Component {
   }
 
   _pause() {
-    // console.log('PPPPPPPPAAAAAUUUUUUSSSSSEE!!!!!!!');
     if (!this.state.paused){
       this.setState({
         paused: true
@@ -76,37 +97,85 @@ export default class Detail extends Component {
     this._fetchData();
   }
 
-  _fetchData() {
-    // console.log('gonnnnna fetch');
-    let that = this;
-    let url = config.api.base + config.api.comments;
+  _fetchData(page) {
+    
+    var that = this;
 
+    this.setState({
+      isLoadingTail: true
+    });
+    
+    //请求数据
+    let url = config.api.base + config.api.comments;
     request.get(url, {
       creation: 124,
-      accessToken: '123a'
+      accessToken: 'adc',
+      page: page
     })
-    .then((data) => {
-      // console.log('got comments');
-      // console.log(data);
-      if (data && data.success){
-        let comments = data.data;
-        
+      .then((data) => {
+        console.log('got data', data);
+        if (data.success){
+          console.log(data);
+          let items = cachedResults.items.slice(0);
 
-        if (comments && comments.length > 0){
+          items = items.concat(data.data);  
+          cachedResults.nextPage += 1;
+
+          cachedResults.items = items;
+          cachedResults.total = data.total;
+
           that.setState({
-            comments: comments,
-            dataSource: that.state.dataSource.cloneWithRows(comments)
+            isLoadingTail: false,
+            dataSource: that.state.dataSource.cloneWithRows(
+              cachedResults.items)
           });
         }
+      })
+      .catch((error) => {
+        this.setState({
+          isLoadingTail: false
+        });
+        console.error(error);
+      });
+  }
 
-      }
-    })
-    .catch((error) => {
-      console.log(error);
-    });
+  _hasMore() {
+    // console.log('hasmore?');
+    console.log(cachedResults.items.length, cachedResults.total);
+    return cachedResults.items.length < cachedResults.total;
+  }
+
+  _fetchMoreData() {
+    if (!this._hasMore() || this.state.isLoadingTail) {
+      return;
+    }
+
+    let page = cachedResults.nextPage;
+
+    console.log(this.state);
+
+    this._fetchData(page);
+  }
+
+  _renderFooter() {
+    if (!this._hasMore() && cachedResults.total !== 0) {
+      return (
+        <View style={styles.loadingMore}>
+          <Text style={styles.loadingText}>没有更多了</Text>
+        </View>
+      )
+    }
+
+    if (!this.state.isLoadingTail) {
+      return <View style={styles.loadingMore} />
+    }
+
+    return  <ActivityIndicator style={styles.loadingMore} />
   }
 
   _renderRow(row) {
+
+    console.log('render', row);
 
     return (
       <View
@@ -125,9 +194,126 @@ export default class Detail extends Component {
     )
   }
 
+  _focus() {
+    this._setModalVisible(true);
+  }
+
+  _setModalVisible(isVisible) {
+    this.setState({
+      modalVisible: isVisible
+    });
+  }
+
+  _blur() {
+    // this._setModalVisible(false); 
+  }
+
+  _closeModal() {
+    this._setModalVisible(false);
+  }
+
+  _renderHeader() {
+    let data = this.state.data;
+
+    return (
+      <View style={styles.listHeader}>
+        <View style={styles.infoBox}>
+          <Image 
+            style={styles.avatar} 
+            source={{uri: data.author.avatar}} 
+            />
+            <View style={styles.descBox}>
+              <Text style={styles.nickname}>{data.author.nickname}</Text>
+              <Text style={styles.title}>{data.title}</Text>
+            </View>
+        </View>
+
+        <View style={styles.commentBox}>
+          <View style={styles.comment}>
+            <TextInput
+              placeholder='我有话要说...'
+              placeholderTextColor={'#787E8A'}
+              style={styles.content}
+              multiline={true}
+              onFocus={this._focus.bind(this)}
+              />
+          </View>
+        </View>
+
+        <View style={styles.commentArea}>
+          <Text style={styles.commentTitle}>评论</Text>
+        </View>
+      </View>
+      
+    );
+  }
+
+  _submit() {
+    let that = this;
+
+    if (!this.state.content) {
+      return AlertIOS.alert('评论不能为空');
+    }
+    if (this.state.isSending) {
+      return AlertIOS.alert('评论提交中');
+    }
+
+    this.setState({
+      isSending: true
+    }, function(){
+      let body = {
+        accessToken: 'abc',
+        creation: '124',
+        content: this.state.content
+      };
+
+      let url = config.api.base + config.api.comments;
+
+      request.post(url, body)
+        .then((data) => {
+          if (data && data.success) {
+
+            //先关modal
+            that._closeModal();
+
+            //再刷新页面
+            let items = cachedResults.items.slice(0);
+            let content = that.state.content;
+
+            items = [{
+              content: content,
+              replyBy: {
+                nickname: '狗狗说',
+                avatar: 'http://dummyimage.com/640x640/31aa94)'
+              }
+            }].concat(items);
+
+            cachedResults.items = items;
+            cachedResults.total += 1;
+
+            that.setState({
+              content: '',
+              isSending: false,
+              dataSource: that.state.dataSource.cloneWithRows(cachedResults.items)
+            });
+
+          }
+
+        })
+        .catch((err) => {
+          console.log(err);
+          that.setState({
+              isSending: false,
+          });
+          that._closeModal();
+          AlertIOS.alert('评论失败了, 稍后试试吧');
+        })
+    });
+  }
+
   render() {
     let data = this.props.data;
-    // console.log(data);
+    console.log(data);
 
     return (
       <View style={styles.container}>
@@ -148,7 +334,7 @@ export default class Detail extends Component {
         <View style={styles.videoBox}>
           <Video 
             ref='videoPlayer'
-            source={{uri: data.video + '12211'}}
+            source={{uri: data.video}}
             style={styles.video}
             volumn={3}
             paused={this.state.paused}
@@ -209,33 +395,55 @@ export default class Detail extends Component {
 
         </View>
 
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          enableEmptySections={true}
-          automaticallyAdjustContentInsets={false}
-          style={styles.scrollView}>
-          <View style={styles.infoBox}>
-            <Image 
-              style={styles.avatar} 
-              source={{uri: data.author.avatar}} 
-              />
-              <View style={styles.descBox}>
-                <Text style={styles.nickname}>{data.author.nickname}</Text>
-                <Text style={styles.title}>{data.title}</Text>
-              </View>
-          </View>
-
           <ListView
-          dataSource={this.state.dataSource}
-          renderRow={this._renderRow.bind(this)}
-          showsVerticalScrollIndicator={false}
-          enableEmptySections={true}
-          automaticallyAdjustContentInsets={false}
-        />
+            dataSource={this.state.dataSource}
+            renderRow={this._renderRow.bind(this)}
+            renderHeader={this._renderHeader.bind(this)}
+            renderFooter={this._renderFooter.bind(this)}
+            onEndReached={this._fetchMoreData.bind(this)}
+            onEndReachedThreshold={20}
+            showsVerticalScrollIndicator={false}
+            enableEmptySections={true}
+            automaticallyAdjustContentInsets={false}
+          />
 
-        </ScrollView>
+        <Modal
+          animationType={'fade'}
+          visible={this.state.modalVisible}
+          onRequestClose={() => this._setModalVisible(false)}
+          >
+          <View style={styles.modalContainer}>
+            <Icon 
+              onPress={this._closeModal.bind(this)}
+              name='ios-close-outline'
+              style={styles.closeIcon}
+              />
+            <View style={styles.commentBox}>
+              <View style={styles.comment}>
+              <TextInput
+                placeholder='我有话要说...'
+                placeholderTextColor={'#787E8A'}
+                style={styles.content}
+                multiline={true}
+                defaultValue={this.state.content}
+                onChangeText={(text) => {
+                  this.setState({
+                    content: text
+                  });
+                }}
+                />
+              </View>
+            </View>
 
-      </View>
+            <Button 
+              style={styles.submitBtn}
+              onPress={this._submit.bind(this)}
+              >评论</Button>
+
+        </View>
+      </Modal>
+
+    </View>
     );
   }
 
@@ -254,7 +462,6 @@ export default class Detail extends Component {
         videoLoaded: true
       });
     }
-  
     let duration = data.playableDuration;
     let currentTime = Number(data.currentTime.toFixed(2));
     let percent = Number((currentTime / duration).toFixed(2));
@@ -453,5 +660,60 @@ const styles = StyleSheet.create({
   },
   reply: {
     flex: 1
+  },
+  loadingMore: {
+    marginVertical: 20
+  },
+  loadingText: {
+    color: '#777',
+    textAlign: 'center'
+  },
+  listHeader: {
+    width: width,
+    marginTop: 10
+  },
+  commentBox: {
+    marginTop: 10,
+    marginBottom: 10,
+    padding: 8,
+    width: width
+  },
+  content: {
+    paddingLeft: 2,
+    color: '#333',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 4,
+    fontSize: 14,
+    height: 80
+  },
+  commentArea: {
+    width: width,
+    paddingBottom: 6,
+    paddingLeft: 10,
+    paddingRight: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee'
+  },
+  modalContainer: {
+    flex: 1,
+    paddingTop: 45,
+    backgroundColor: '#fff'
+  },
+  closeIcon: {
+    alignSelf: 'center',
+    fontSize: 30,
+    color: '#ee753c'
+  },
+  submitBtn: {
+    width: width - 20,
+    alignSelf: 'center',
+    padding: 16,
+    marginTop: 20,
+    borderWidth: 1,
+    borderColor: '#ee735c',
+    borderRadius: 4,
+    color: '#ee735c',
+    fontSize: 18
   }
 });

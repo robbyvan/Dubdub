@@ -195,9 +195,8 @@ export default class List extends Component {
   }
 
   _hasMore() {
-    // console.log('hasmore?');
     console.log(cachedResults.items.length, cachedResults.total);
-    return cachedResults.items.length !== cachedResults.total;
+    return cachedResults.items.length < cachedResults.total;
   }
 
   _onRefresh() {
@@ -215,7 +214,7 @@ export default class List extends Component {
 
     let page = cachedResults.nextPage;
 
-    console.log(this.state);
+    // console.log(this.state);
 
     this._fetchData(page);
   }
