@@ -10,6 +10,21 @@ import {
   AsyncStorage
 } from 'react-native';
 
+var ImagePicker = require('react-native-image-picker');
+var photoOptions = {
+  title: '选择头像',
+  cancelButtonTitle: '取消',
+  takePhotoButtonTitle: '拍照上传',
+  chooseFromLibraryButtonTitle: '从相册上传',
+  quality: 0.75,
+  allowsEditing: true,
+  noData: false,
+  storageOptions: {
+    skipBackup: true,
+    path: 'images'
+  }
+};
+
 let width = Dimensions.get('window').width;
 
 export default class Account extends Component {
@@ -39,6 +54,27 @@ export default class Account extends Component {
       })
   }
 
+  _pickPhoto() {
+    let that = this;
+
+    console.log('what');
+
+    ImagePicker.showImagePicker(photoOptions, (response) => {
+      if (response.didCancel) {
+        return;
+      }
+
+      let avatarData = 'data:image/jpeg;base64,' + response.data;
+      let user = this.state.user;
+
+      user.avatar = avatarData;
+
+      that.setState({
+        user: user
+      });
+    });
+  }
+
   render() {
     let user = this.state.user;
 
@@ -49,8 +85,11 @@ export default class Account extends Component {
         </View>
 
         {
-          !user.avatar
-          ?<TouchableOpacity style={styles.avatarContainer}>
+          user.avatar
+          ?<TouchableOpacity 
+              style={styles.avatarContainer}
+              onPress={this._pickPhoto.bind(this)}
+              >
                 <Image 
                   style={styles.avatarContainer} 
                   source={{uri: user.avatar}}>
@@ -62,17 +101,20 @@ export default class Account extends Component {
                   </View>
                   <Text style={styles.avatarTip}>更换头像</Text>
                 </Image>
-                
             </TouchableOpacity>
-        :<View style={styles.avatarContainer}>
+        :
+        <TouchableOpacity 
+          style={styles.avatarContainer}
+          onPress={this._pickPhoto.bind(this)}
+          >
               <Text style={styles.avatarTip}>添加头像</Text>
-              <TouchableOpacity style={styles.avatarBox}>
+              <View style={styles.avatarBox}>
                 <Icon 
                   name='ios-add'
                   style={styles.plusIcon}
                   />
-              </TouchableOpacity>
-          </View>
+              </View>
+          </TouchableOpacity>
         }
           
       </View>
