@@ -10,6 +10,7 @@ import {
   AsyncStorage,
   AlertIOS
 } from 'react-native';
+import * as Progress from 'react-native-progress';
 
 var sha1 = require('sha1');
 var request = require('./../common/request');
@@ -52,7 +53,9 @@ export default class Account extends Component {
     super(props);
     let user = this.props.user || {}
     this.state = {
-      user: user
+      user: user,
+      avatarProgress: 0,
+      avatarUploading: false
     };
   }
 
@@ -131,7 +134,12 @@ export default class Account extends Component {
     let xhr = new XMLHttpRequest();
     let url = CLOUDINARY.image;
 
-    console.log('body', body, 'url', url);
+
+    this.setState({
+      avatarUploading: true,
+      avatarProgress: 0
+    })
+
     xhr.open('POST', url);
 
     console.log('new xhr', xhr);
@@ -164,12 +172,26 @@ export default class Account extends Component {
         user.avatar = avatarSource(response.public_id, 'image');
 
         that.setState({
-          user: user
+          user: user,
+          avatarUploading: false,
+          avatarProgress: 0,
         });
       }
     }
+
     xhr.onerror = (err) => {
       console.log('on error', err);
+    }
+
+    if (xhr.upload) {
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          let percent = Number((event.loaded / event.total).toFixed(2));
+          that.setState({
+            avatarProgress: percent
+          });
+        };
+      }
     }
 
     xhr.send(body);
@@ -194,10 +216,20 @@ export default class Account extends Component {
                   style={styles.avatarContainer} 
                   source={{uri: user.avatar}}>
                   <View style={styles.avatarBox}>
-                    <Image 
-                      source={{uri: user.avatar}}
-                      style={styles.avatar}
-                      />
+                    {
+                      this.state.avatarUploading
+                      ?<Progress.Circle 
+                          size={30} 
+                          showsText={true}
+                          color={'#ee735c'}
+                          size={75}
+                          progress={this.state.avatarProgress}
+                          />
+                      :<Image 
+                          source={{uri: user.avatar}}
+                          style={styles.avatar}
+                          />
+                    }
                   </View>
                   <Text style={styles.avatarTip}>更换头像</Text>
                 </Image>
@@ -209,10 +241,20 @@ export default class Account extends Component {
           >
               <Text style={styles.avatarTip}>添加头像</Text>
               <View style={styles.avatarBox}>
-                <Icon 
-                  name='ios-add'
-                  style={styles.plusIcon}
-                  />
+                {
+                  this.state.avatarUploading
+                  ?<Progress.Circle 
+                      size={30} 
+                      showsText={true}
+                      color={'#ee735c'}
+                      size={75}
+                      progress={this.state.avatarProgress}
+                      />
+                  :<Icon 
+                    name='ios-add'
+                    style={styles.plusIcon}
+                    />
+                }
               </View>
           </TouchableOpacity>
         }
