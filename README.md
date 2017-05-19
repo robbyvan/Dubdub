@@ -3,10 +3,11 @@ Learning RN
 
 使用RN开发一款iOS App
 
-[x]视频列表页
-[]视频上传页
-[x]个人资料页
-[x]登录与登出
+## Todo
+* [x] 登录与登出
+* [x] 视频列表页
+* [ ] 视频上传页
+* [x] 个人资料页
 
 ## 登录
 ![image](https://github.com/robbyvan/Dubdub/blob/master/gif/Dub_login.gif)
