@@ -1,7 +1,7 @@
 # Dubdub
 Learning RN
 
-使用RN开发一款iOS App
+使用RN开发一款iOS App, 上传视频并配音
 
 ## Todo
 * [x] 登录与登出
