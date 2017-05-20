@@ -24,8 +24,6 @@ var config = require('./../common/config');
 
 let width = Dimensions.get('window').width;
 
-
-
 var cachedResults = {
   nextPage: 1,
   items: [],
