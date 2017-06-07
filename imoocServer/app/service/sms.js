@@ -1,5 +1,5 @@
 var https = require('https');
-var queryString = require('queryString');
+var queryString = require('query-string');
 var Promise = require('bluebird');
 var speakeasy = require('speakeasy');
 

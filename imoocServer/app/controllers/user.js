@@ -7,7 +7,7 @@ var uuid = require('uuid');
 var sms = require('../service/sms');
 
 exports.signup = function *(next) {
-  let phoneNumber = this.query.phoneNumber;
+  let phoneNumber = this.request.body.phoneNumber;
 
   let user = yield User.findOne({
     phoneNumber: phoneNumber
@@ -65,13 +65,14 @@ exports.signup = function *(next) {
 
 
 exports.verify = function *(next) {
+  console.log(this.request.body);
   let verifyCode = this.request.body.verifyCode;
   let phoneNumber = this.request.body.phoneNumber;
 
   if (!verifyCode || !phoneNumber) {
     this.body = {
       success: false,
-      err: '验证失败'
+      err: '验证失败, 空了'
     };
     return next;
   }
@@ -80,6 +81,8 @@ exports.verify = function *(next) {
     phoneNumber: phoneNumber,
     verifyCode: verifyCode
   }).exec();
+
+  console.log('user是', user);
 
   if (user) {
     user.verified = true;
@@ -99,30 +102,12 @@ exports.verify = function *(next) {
       err: '验证失败'
     };
   }
-
-  this.body = {
-    success: true
-  };
 }
-
-
 
 
 exports.update = function *(next) {
   var body = this.request.body;
-  var accessToken = body.accessToken;
-
-  var user = yield User.findOne({
-    accessToken: accessToken
-  }).exec();
-
-  if (!user) {
-    this.body = {
-      success: false;
-      err: '用户不见了'
-    };
-    return next;
-  }
+  var user = this.session.user;
 
   var fields = 'avatar,gender,age,nickname'.split(',');
 

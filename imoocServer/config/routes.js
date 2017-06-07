@@ -10,9 +10,9 @@ module.exports = function() {
   });
 
   //user
-  router.get('/u/signup', User.signup);
-  router.post('/u/verify', User.verify);
-  router.post('/u/update', User.update);
+  router.post('/u/signup', App.hasBody, User.signup);
+  router.post('/u/verify', App.hasBody, User.verify);
+  router.post('/u/update', App.hasBody, App.hasToken, User.update);
 
   //app
   router.post('/signature', App.signature);

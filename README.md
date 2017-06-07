@@ -8,8 +8,7 @@ Learning RN
 * [x] 视频列表页
 * [ ] 视频上传页
 * [x] 个人资料页
-* [ ] 后台 / API接口
-
+* [x] 数据库 / 本地API测试
 ## 登录
 ![image](https://github.com/robbyvan/Dubdub/blob/master/gif/Dub_login.gif)
 
