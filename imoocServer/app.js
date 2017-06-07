@@ -10,23 +10,24 @@ mongoose.Promise = require('bluebird');
 mongoose.connect(db);
 
 //加载用户模型
-var models_path = path.join(__dirname, '/app/models');
-var walk = function(modelPath) {
-  fs
-    .readdirSync(modelPath)
-    .forEach((file) => {
-      let filePath = path.join(modelPath, '/' + file);
-      let stat = fs.statSync(filePath);
-      if (stat.isFile()) {
-        if (/(.*)\.(js|coffee)/.test(file)) {
-          require(filePath);
-        }
-      }else if(stat.isDirectory()) {
-        walk(filePath);
-      }
-    });
-}
-//或者直接 require('./app/models/user');
+// var models_path = path.join(__dirname, '/app/models');
+// var walk = function(modelPath) {
+//   fs
+//     .readdirSync(modelPath)
+//     .forEach((file) => {
+//       let filePath = path.join(modelPath, '/' + file);
+//       let stat = fs.statSync(filePath);
+//       if (stat.isFile()) {
+//         if (/(.*)\.(js|coffee)/.test(file)) {
+//           require(filePath);
+//         }
+//       }else if(stat.isDirectory()) {
+//         walk(filePath);
+//       }
+//     });
+// }
+//或者直接 
+require('./app/models/user');
 
 const koa = require('koa');
 const logger = require('koa-logger');

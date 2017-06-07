@@ -1,16 +1,19 @@
-const mongoose = require('mongoose');
+var mongoose = require('mongoose');
 
-const UserSchema = new mongoose.Schema({
+var UserSchema = new mongoose.Schema({
   phoneNumber: {
     unique: true,
     type: String
   },
   areaCode: String,
   verifyCode: String,
+  verified: {
+    type: Boolean,
+    default: false
+  },
   accessToken: String,
   nickname: String,
   gender: String,
-  breed: String,
   age: String,
   avatar: String,
   meta: {
@@ -25,10 +28,14 @@ const UserSchema = new mongoose.Schema({
   }
 });
 
-UserSchema.pre('save', function(next) {
-  if(this.isNew) {
-    this.meta.updateAt = Date.now();
-  }
-});
-
 module.exports = mongoose.model('User', UserSchema);
+
+// UserSchema.pre('save', function(next) {
+//   if(self.isNew) {
+//     self.meta.createAt = self.meta.updateAt = Date.now();
+//   }else {
+//     self.meta.updateAt = Date.now();
+//   }
+//   next();
+// });
+
