@@ -1,6 +1,10 @@
 'use strict';
 
 module.exports = {
+  qiniu: {
+    AK: 'dkrLZWefCLv76_42ZgBZdxbqqXmIIb6YCK5e6O3m',
+    SK: 'eGElXt3cjbFb25QY6BtoxWsNf_KHojNAjXzI8yEs'
+  },
   CLOUDINARY: {
     cloud_name: 'dnsavc5be',  
     api_key: '925995529743554',  

@@ -35,15 +35,6 @@ var photoOptions = {
   }
 };
 
-const CLOUDINARY = {
-  cloud_name: 'dnsavc5be',  
-  api_key: '925995529743554',  
-  base:  'http://res.cloudinary.com/dnsavc5be',
-  image: 'https://api.cloudinary.com/v1_1/dnsavc5be/image/upload',
-  video: 'https://api.cloudinary.com/v1_1/dnsavc5be/video/upload',
-  audio: 'https://api.cloudinary.com/v1_1/dnsavc5be/raw/upload'
-};
-
 let width = Dimensions.get('window').width;
 
 function avatarSource(id, type) {
@@ -56,7 +47,13 @@ function avatarSource(id, type) {
     return id
   }
 
-  return CLOUDINARY.base + '/' + type + '/upload/' + id;
+  if (id.indexOf('avatar') !== -1) {
+    return config.cloudinary.base + '/' + type + '/upload/' + id;  
+  }
+
+  return 'http://or7waekoq.bkt.clouddn.com/' + id;
+
+  
 }
 
 export default class Account extends Component {
@@ -106,6 +103,18 @@ export default class Account extends Component {
     this._asyncUser();
   }
 
+  _getQiniuToken() {
+    let accessToken = this.state.user.accessToken;
+    let signatureURL = config.api.base + config.api.signature;
+    return request.post(signatureURL, {
+        accessToken: accessToken,
+        cloud: 'qiniu'
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }
+
   _pickPhoto() {
     let that = this;
 
@@ -115,54 +124,73 @@ export default class Account extends Component {
       }
 
       let avatarData = 'data:image/jpeg;base64,' + response.data;
+      // let timestamp = Date.now();
+      // let tags = 'app,avatar';
+      // let folder = 'avatar';
+      let uri = response.uri;
 
-      let timestamp = Date.now();
-      let tags = 'app,avatar';
-      let folder = 'avatar';
-      let signatureURL = config.api.base + config.api.signature;
-      let accessToken = this.state.user.accessToken;
-
-      request.post(signatureURL, {
-        accessToken: accessToken,
-        folder: folder,
-        tags: tags,
-        timestamp: timestamp,
-        type: 'avatar'
-      })
-      .catch((err) => {
-        console.log(err);
-      })
-      .then((data) => {
-        console.log('data', data);
-        if (data && data.success) {
-          
+      that._getQiniuToken()
+        .then((data) => {
+          console.log('data', data.data);
+          if (data && data.success) {
+        
           //data.data
-          let signature = data.data;
+          let token = data.data.token;
+          let key = data.data.key;
 
           let body = new FormData();
 
-          body.append('folder', folder);
-          body.append('signature', signature);
-          body.append('tags', tags);
-          body.append('timestamp', timestamp);
-          body.append('api_key', CLOUDINARY.api_key);
-          body.append('resource_type', 'image');
-          body.append('file', avatarData);
+          body.append('token', token);
+          body.append('key', key);
+          body.append('file', {
+            type: 'image/png',
+            uri: uri,
+            name: key
+          });
 
           that._upload(body);
+          }
+        });
 
-        }
-      })
+      // request.post(signatureURL, {
+      //   accessToken: accessToken,
+      //   key: key
+      // })
+      // .catch((err) => {
+      //   console.log(err);
+      // })
+      // .then((data) => {
+      //   console.log('data', data);
+      //   if (data && data.success) {
+          
+      //     //data.data
+      //     let signature = data.data;
 
+      //     let body = new FormData();
+
+      //     body.append('folder', folder);
+      //     body.append('signature', signature);
+      //     body.append('tags', tags);
+      //     body.append('timestamp', timestamp);
+      //     body.append('api_key', config.cloudinary..api_key);
+      //     body.append('resource_type', 'image');
+      //     body.append('file', avatarData);
+
+      //     that._upload(body);
+
+      //   }
+      // });
     });
   }
 
   _upload(body) {
 
+    console.log('body是', body);
+
     let that = this;
 
     let xhr = new XMLHttpRequest();
-    let url = CLOUDINARY.image;
+    let url = config.qiniu.upload;
 
 
     this.setState({
@@ -197,9 +225,18 @@ export default class Account extends Component {
         console.log('parse failed');
       }
 
-      if (response && response.public_id) {
+      console.log(response);
+
+      if (response){
         let user = this.state.user;
-        user.avatar = response.public_id;
+
+        if(response.public_id){
+          user.avatar = response.public_id;
+        }
+
+        if (response.key) {
+         user.avatar = response.key; 
+        }       
 
         that.setState({
           user: user,

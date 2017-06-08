@@ -2,34 +2,28 @@
 
 var mongoose = require('mongoose');
 var User = mongoose.model('User');
+var uuid = require('uuid');
 
-var config = require('../../config/config');
-var sha1 = require('sha1');
-
+var robot = require('../service/robot');
 
 exports.signature = function *(next) {
   let body = this.request.body;
-  let type = body.type;
-  let timestamp = body.timestamp;
-  let folder, tags;
+  let cloud = body.cloud;
+  let token, key;
 
-  if (type === 'avatar') {
-    folder = 'avatar';
-    tags = 'app,avatar'
-  }else if (type === 'video') {
-    folder = 'video';
-    tags = 'app,video';
-  }else if (type === 'audio') {
-    folder = 'audio';
-    tags = 'app,audio';
+  if (cloud === 'qiniu') {
+    key = uuid.v4() + '.jpeg';
+    token = robot.getQiniuToken(key);
+  }else {
+    token = robot.getCloudinaryToken(body);
   }
-
-  let signature = 'folder=' + folder + '&tags=' + tags + '&timestamp=' + timestamp + config.CLOUDINARY.api_secret;
-  signature = sha1(signature);
 
   this.body = {
     success: true,
-    data: signature
+    data: {
+      token: token,
+      key: key
+    }
   };
 }
 
