@@ -38,7 +38,6 @@ var photoOptions = {
 const CLOUDINARY = {
   cloud_name: 'dnsavc5be',  
   api_key: '925995529743554',  
-  api_secret: 'r_pa57uynf1Q0T92L6thDpaIznA',  
   base:  'http://res.cloudinary.com/dnsavc5be',
   image: 'https://api.cloudinary.com/v1_1/dnsavc5be/image/upload',
   video: 'https://api.cloudinary.com/v1_1/dnsavc5be/video/upload',
@@ -136,8 +135,9 @@ export default class Account extends Component {
       .then((data) => {
         console.log('data', data);
         if (data && data.success) {
-          let signature = 'folder=' + folder + '&tags=' + tags + '&timestamp=' + timestamp + CLOUDINARY.api_secret;
-          signature = sha1(signature);
+          
+          //data.data
+          let signature = data.data;
 
           let body = new FormData();
 

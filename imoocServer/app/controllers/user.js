@@ -7,7 +7,7 @@ var uuid = require('uuid');
 var sms = require('../service/sms');
 
 exports.signup = function *(next) {
-  let phoneNumber = this.request.body.phoneNumber;
+  let phoneNumber = xss(this.request.body.phoneNumber.trim());
 
   let user = yield User.findOne({
     phoneNumber: phoneNumber
@@ -113,7 +113,7 @@ exports.update = function *(next) {
 
   fields.forEach((field) => {
     if (body[field]) {
-      user[field] = body[field];
+      user[field] = xss(body[field].trim());
     }
   });
 

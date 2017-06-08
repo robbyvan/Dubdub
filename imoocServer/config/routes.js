@@ -6,7 +6,7 @@ var App = require('../app/controllers/app');
 
 module.exports = function() {
   var router = new Router({
-    prefix: '/api/1'
+    prefix: '/api'
   });
 
   //user
